@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Serialization;
 using TheWorld.Models;
 using TheWorld.Services;
+using TheWorld.ViewModels;
 
 namespace TheWorld
 {
@@ -46,17 +49,28 @@ namespace TheWorld
 
             services.AddLogging();
 
-            services.AddMvc();
+            services.AddMvc()
+                .AddJsonOptions(config =>
+            {
+                config.SerializerSettings.ContractResolver
+              = new CamelCasePropertyNamesContractResolver();
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, 
-            IHostingEnvironment env, 
+        public void Configure(
+            IApplicationBuilder app,
+            IHostingEnvironment env,
             ILoggerFactory loggerFactory,
             WorldContextSeedData seeder,
             ILoggerFactory factory)
         {
             loggerFactory.AddConsole();
+
+            Mapper.Initialize(config =>
+            {
+                config.CreateMap<TripViewModel, Trip>().ReverseMap();
+            });
 
             if (env.IsDevelopment())
             {
@@ -70,7 +84,8 @@ namespace TheWorld
 
             app.UseStaticFiles();
 
-            app.UseMvc(config => {
+            app.UseMvc(config =>
+            {
                 config.MapRoute(
                     name: "Default",
                     template: "{controller}/{action}/{id?}",
